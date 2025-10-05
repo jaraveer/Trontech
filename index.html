@@ -403,7 +403,7 @@
     // TronWeb initialization
     async function initTronWeb() {
       try {
-        tronWebInstance = new TronWeb(MAINNET_NODE);
+        tronWebInstance = new window.TronWeb({ fullHost: MAINNET_NODE });
         log("TronWeb connected to mainnet: " + MAINNET_NODE);
         return true;
       } catch (error) {
