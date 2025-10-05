@@ -312,12 +312,10 @@
 
   <script src="https://unpkg.com/@walletconnect/client/dist/umd/index.min.js"></script>
   <script src="https://unpkg.com/tronweb/dist/TronWeb.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     // Constants
     const TOKEN_CONTRACT = "TPT4Xin2sgSvWf53jKGcZXhMGLzaqNmkLh";
     const MAINNET_NODE = "https://api.trongrid.io";
-    const WalletConnect = window.WalletConnect.default;
     
     // State variables
     let connector = null;
@@ -400,10 +398,35 @@
       }
     }
 
-    // TronWeb initialization
+    // TronWeb initialization - FIXED VERSION
     async function initTronWeb() {
       try {
-        tronWebInstance = new window.TronWeb({ fullHost: MAINNET_NODE });
+        // Check if TronWeb is available and what format it's in
+        if (typeof window.TronWeb === 'undefined') {
+          throw new Error('TronWeb library not loaded');
+        }
+        
+        // Different TronWeb distributions might export differently
+        let TronWebConstructor;
+        if (typeof window.TronWeb === 'function') {
+          TronWebConstructor = window.TronWeb;
+        } else if (window.TronWeb.default) {
+          TronWebConstructor = window.TronWeb.default;
+        } else {
+          // If it's already an instance or has different structure
+          tronWebInstance = window.TronWeb;
+          log("Using global TronWeb instance");
+          return true;
+        }
+        
+        // Create new instance
+        tronWebInstance = new TronWebConstructor({
+          fullHost: MAINNET_NODE,
+          headers: { "TRON-PRO-API-KEY": "your-api-key-here" }
+        });
+        
+        // Test the connection
+        await tronWebInstance.trx.getCurrentBlock();
         log("TronWeb connected to mainnet: " + MAINNET_NODE);
         return true;
       } catch (error) {
@@ -416,6 +439,12 @@
     // WalletConnect connector
     async function createConnector() {
       try {
+        const WalletConnect = window.WalletConnect?.default || window.WalletConnect;
+        
+        if (typeof WalletConnect === 'undefined') {
+          throw new Error('WalletConnect library not loaded');
+        }
+        
         connector = new WalletConnect({ 
           bridge: "https://bridge.walletconnect.org" 
         });
@@ -469,19 +498,24 @@
     // Token amount conversion
     async function toTokenBase(amountHuman) {
       try {
+        if (!tronWebInstance) {
+          throw new Error('TronWeb not initialized');
+        }
+        
         const contract = await tronWebInstance.contract().at(TOKEN_CONTRACT);
-        const decimals = (await contract.decimals().call()).toString();
-        const factor = BigInt(10) ** BigInt(decimals);
+        const decimals = await contract.decimals().call();
+        const decimalsStr = decimals.toString();
+        const factor = BigInt(10) ** BigInt(decimalsStr);
         
         const parts = String(amountHuman).split(".");
         let whole = BigInt(parts[0] || "0");
         let frac = parts[1] || "";
         
-        if (frac.length > Number(decimals)) {
-          frac = frac.slice(0, Number(decimals));
+        if (frac.length > Number(decimalsStr)) {
+          frac = frac.slice(0, Number(decimalsStr));
         }
         
-        while (frac.length < Number(decimals)) {
+        while (frac.length < Number(decimalsStr)) {
           frac += "0";
         }
         
@@ -497,6 +531,10 @@
     // Transaction building
     async function buildApproveTx(from, spender, amountBase) {
       try {
+        if (!tronWebInstance) {
+          throw new Error('TronWeb not initialized');
+        }
+        
         const tx = await tronWebInstance.transactionBuilder.triggerSmartContract(
           TOKEN_CONTRACT,
           "approve(address,uint256)",
@@ -611,8 +649,9 @@
             window.location.href = "trust://wc?uri=" + encodeURIComponent(uri);
             setStatus("Check Trust Wallet to connect", "loading");
           } catch (error) {
-            // If deep linking fails, show QR code modal
-            showQRCode(uri);
+            // If deep linking fails, show alert with URI
+            alert("Please open Trust Wallet and connect using this URI:\n\n" + uri);
+            setStatus("URI copied to clipboard", "loading");
           }
         } catch (error) {
           log("Session creation error: " + error.message);
@@ -621,24 +660,6 @@
           updateUI();
         }
       }
-    }
-
-    // QR code display
-    function showQRCode(uri) {
-      wcUri.value = uri;
-      
-      // Generate QR code
-      QRCode.toCanvas(uri, { width: 200, margin: 1 }, (error, canvas) => {
-        if (error) {
-          log("QR code generation error: " + error.message);
-          return;
-        }
-        
-        qrCode.innerHTML = "";
-        qrCode.appendChild(canvas);
-      });
-      
-      qrModal.classList.remove("hidden");
     }
 
     // Event listeners
@@ -665,24 +686,12 @@
       }
       
       // Initialize TronWeb for non-connected operations
-      initTronWeb();
+      initTronWeb().then(success => {
+        if (success) {
+          log("TronWeb initialized successfully");
+        }
+      });
     })();
-  <!-- Load WalletConnect and TronWeb -->
-<script src="https://unpkg.com/@walletconnect/client/dist/umd/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.1/dist/TronWeb.min.js"></script>
-<script>
-  const MAINNET_NODE = "https://api.trongrid.io";
-  let tronWebInstance;
-  function log(msg){ console.log(msg); }
-  async function initTronWeb(){
-    try {
-      tronWebInstance = new window.TronWeb({ fullHost: MAINNET_NODE });
-      log("✅ TronWeb initialized successfully");
-    } catch(e) {
-      log("❌ Failed to initialize TronWeb: " + e.message);
-    }
-  }
-  initTronWeb();
-</script>
+  </script>
 </body>
 </html>
