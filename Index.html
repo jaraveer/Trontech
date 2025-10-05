@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TronTech — TRC20 Approve (Mainnet)</title>
+  <meta name="description" content="TronTech TRC20 approve demo wired to Trust Wallet + WalletConnect on TRON mainnet" />
+  <style>
+    :root {
+      --bg: #071226;
+      --card: #071a2a;
+      --muted: #9aa4b2;
+      --accent: #00d1b2;
+      --glass: rgba(255,255,255,0.03);
+      --error: #ff3860;
+      --success: #23d160;
+    }
+    
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: #e6eef6;
+      background: linear-gradient(180deg, #071226, #031124);
+    }
+    
+    .container {
+      max-width: 520px;
+      margin: 22px auto;
+      padding: 14px;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00bfa6, #0066ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 16px;
+    }
+    
+    .sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    
+    .card {
+      background: var(--card);
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 14px;
+      box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
+    }
+    
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .balance {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    
+    button {
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent), #0066ff);
+      color: #021019;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 209, 178, 0.3);
+    }
+    
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+    }
+    
+    .btn-ghost:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+      color: inherit;
+      margin-top: 8px;
+      box-sizing: border-box;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .field {
+      margin-top: 16px;
+    }
+    
+    .log {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 13px;
+      color: var(--muted);
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+    }
+    
+    .status {
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    
+    .status-idle {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .status-loading {
+      background: rgba(0, 209, 178, 0.1);
+      color: var(--accent);
+    }
+    
+    .status-success {
+      background: rgba(35, 209, 96, 0.1);
+      color: var(--success);
+    }
+    
+    .status-error {
+      background: rgba(255, 56, 96, 0.1);
+      color: var(--error);
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 6px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .error-message {
+      color: var(--error);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    .success-message {
+      color: var(--success);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    .footer {
+      margin-top: 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    
+    .qr-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(7, 18, 38, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .qr-content {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 300px;
+    }
+    
+    .qr-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">TT</div>
+        <div>
+          <h1>TronTech — TRC20 Approve</h1>
+          <div class="sub">Connected to TRON Mainnet • Contract: <strong>TPT4Xin2sgSvWf53jKGcZXhMGLzaqNmkLh</strong></div>
+        </div>
+      </div>
+      <div><button id="connectBtn" class="btn-primary">Connect</button></div>
+    </header>
+
+    <div class="card">
+      <div class="field">
+        <div class="small">Connected Address</div>
+        <div id="address" class="balance">Not connected</div>
+      </div>
+
+      <div class="field">
+        <label for="spender" class="small">Spender (who will be approved)</label>
+        <input id="spender" value="TPT4Xin2sgSvWf53jKGcZXhMGLzaqNmkLh" />
+        <div id="spenderError" class="error-message hidden"></div>
+      </div>
+
+      <div class="field">
+        <label for="amount" class="small">Amount to approve</label>
+        <input id="amount" value="1000" />
+        <div id="amountError" class="error-message hidden"></div>
+      </div>
+
+      <div class="field row" style="justify-content:space-between">
+        <button id="approveBtn" class="btn-primary" disabled>Approve</button>
+        <button id="clearBtn" class="btn-ghost">Clear Log</button>
+      </div>
+
+      <div id="status" class="status status-idle">Status: idle</div>
+      <div id="log" class="log">Logs will appear here.</div>
+    </div>
+
+    <div class="footer">
+      Hosted on <strong>https://trontech.shop</strong> — TRON Mainnet only.
+    </div>
+  </div>
+
+  <div id="qrModal" class="qr-modal hidden">
+    <div class="qr-content">
+      <button id="qrClose" class="qr-close">×</button>
+      <h3>Scan with Trust Wallet</h3>
+      <div id="qrCode"></div>
+      <p>Or copy this URI:</p>
+      <textarea id="wcUri" rows="3" style="width: 100%; background: rgba(0,0,0,0.2); border: none; border-radius: 4px; color: white; padding: 8px; resize: none;"></textarea>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@walletconnect/client/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/tronweb/dist/TronWeb.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    // Constants
+    const TOKEN_CONTRACT = "TPT4Xin2sgSvWf53jKGcZXhMGLzaqNmkLh";
+    const MAINNET_NODE = "https://api.trongrid.io";
+    const WalletConnect = window.WalletConnect.default;
+    
+    // State variables
+    let connector = null;
+    let tronWebInstance = null;
+    let isConnecting = false;
+    let isApproving = false;
+
+    // DOM elements
+    const connectBtn = document.getElementById("connectBtn");
+    const addressEl = document.getElementById("address");
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+    const approveBtn = document.getElementById("approveBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const spenderInput = document.getElementById("spender");
+    const amountInput = document.getElementById("amount");
+    const spenderError = document.getElementById("spenderError");
+    const amountError = document.getElementById("amountError");
+    const qrModal = document.getElementById("qrModal");
+    const qrClose = document.getElementById("qrClose");
+    const qrCode = document.getElementById("qrCode");
+    const wcUri = document.getElementById("wcUri");
+
+    // Utility functions
+    function log(msg) {
+      const t = new Date().toLocaleTimeString();
+      logEl.innerText = `[${t}] ${msg}\n` + logEl.innerText;
+    }
+
+    function setStatus(status, type = "idle") {
+      statusEl.className = `status status-${type}`;
+      statusEl.innerHTML = type === "loading" 
+        ? `<span class="loading-spinner"></span>${status}`
+        : status;
+    }
+
+    function showError(element, message) {
+      element.textContent = message;
+      element.classList.remove("hidden");
+    }
+
+    function hideError(element) {
+      element.textContent = "";
+      element.classList.add("hidden");
+    }
+
+    function validateInputs() {
+      let isValid = true;
+      
+      // Validate spender address
+      const spender = spenderInput.value.trim();
+      if (!spender || spender.length !== 34 || !spender.startsWith("T")) {
+        showError(spenderError, "Invalid TRON address format");
+        isValid = false;
+      } else {
+        hideError(spenderError);
+      }
+      
+      // Validate amount
+      const amount = amountInput.value.trim();
+      if (!amount || isNaN(amount) || Number(amount) <= 0) {
+        showError(amountError, "Amount must be a positive number");
+        isValid = false;
+      } else {
+        hideError(amountError);
+      }
+      
+      return isValid;
+    }
+
+    function updateUI() {
+      const isConnected = connector && connector.connected;
+      
+      if (isConnected) {
+        connectBtn.textContent = "Disconnect";
+        approveBtn.disabled = isApproving || !validateInputs();
+      } else {
+        connectBtn.textContent = isConnecting ? "Connecting..." : "Connect";
+        approveBtn.disabled = true;
+      }
+    }
+
+    // TronWeb initialization
+    async function initTronWeb() {
+      try {
+        tronWebInstance = new TronWeb(MAINNET_NODE);
+        log("TronWeb connected to mainnet: " + MAINNET_NODE);
+        return true;
+      } catch (error) {
+        log("Failed to initialize TronWeb: " + error.message);
+        setStatus("TronWeb initialization failed", "error");
+        return false;
+      }
+    }
+
+    // WalletConnect connector
+    async function createConnector() {
+      try {
+        connector = new WalletConnect({ 
+          bridge: "https://bridge.walletconnect.org" 
+        });
+        
+        connector.on("connect", (error, payload) => {
+          if (error) {
+            log("Connection error: " + error.message);
+            setStatus("Connection failed", "error");
+            return;
+          }
+          
+          const address = payload.params[0].accounts[0];
+          addressEl.textContent = address;
+          isConnecting = false;
+          setStatus("Connected", "success");
+          log("Connected: " + address);
+          updateUI();
+        });
+        
+        connector.on("disconnect", (error) => {
+          if (error) {
+            log("Disconnection error: " + error.message);
+          }
+          
+          addressEl.textContent = "Not connected";
+          isConnecting = false;
+          setStatus("Disconnected", "idle");
+          log("Disconnected");
+          updateUI();
+        });
+        
+        connector.on("session_update", (error, payload) => {
+          if (error) {
+            log("Session update error: " + error.message);
+            return;
+          }
+          
+          const address = payload.params[0].accounts[0];
+          addressEl.textContent = address;
+          log("Session updated: " + address);
+        });
+        
+        return connector;
+      } catch (error) {
+        log("Failed to create connector: " + error.message);
+        setStatus("Connector creation failed", "error");
+        return null;
+      }
+    }
+
+    // Token amount conversion
+    async function toTokenBase(amountHuman) {
+      try {
+        const contract = await tronWebInstance.contract().at(TOKEN_CONTRACT);
+        const decimals = (await contract.decimals().call()).toString();
+        const factor = BigInt(10) ** BigInt(decimals);
+        
+        const parts = String(amountHuman).split(".");
+        let whole = BigInt(parts[0] || "0");
+        let frac = parts[1] || "";
+        
+        if (frac.length > Number(decimals)) {
+          frac = frac.slice(0, Number(decimals));
+        }
+        
+        while (frac.length < Number(decimals)) {
+          frac += "0";
+        }
+        
+        const fracBig = BigInt(frac || "0");
+        return (whole * factor) + fracBig;
+      } catch (error) {
+        log("Error converting amount: " + error.message);
+        // Fallback: assume 6 decimals (common for TRC20 tokens)
+        return BigInt(Math.floor(Number(amountHuman) * 1e6));
+      }
+    }
+
+    // Transaction building
+    async function buildApproveTx(from, spender, amountBase) {
+      try {
+        const tx = await tronWebInstance.transactionBuilder.triggerSmartContract(
+          TOKEN_CONTRACT,
+          "approve(address,uint256)",
+          { feeLimit: 1_000_000 },
+          [
+            { type: "address", value: spender },
+            { type: "uint256", value: amountBase.toString() }
+          ],
+          from
+        );
+        
+        if (tx && tx.result && tx.result.result) {
+          return tx.transaction;
+        }
+        
+        throw new Error("Transaction building failed");
+      } catch (error) {
+        log("Transaction building error: " + error.message);
+        throw error;
+      }
+    }
+
+    // Approval flow
+    async function approveFlow() {
+      if (!connector || !connector.connected) {
+        setStatus("Wallet not connected", "error");
+        return;
+      }
+      
+      if (!validateInputs()) {
+        setStatus("Invalid inputs", "error");
+        return;
+      }
+      
+      isApproving = true;
+      updateUI();
+      
+      try {
+        setStatus("Initializing TronWeb...", "loading");
+        const tronWebReady = await initTronWeb();
+        if (!tronWebReady) {
+          throw new Error("TronWeb initialization failed");
+        }
+        
+        const from = connector.accounts[0];
+        const spender = spenderInput.value.trim();
+        const amountHuman = amountInput.value.trim();
+        
+        setStatus("Converting amount...", "loading");
+        const amountBase = await toTokenBase(amountHuman);
+        log(`Approving ${amountHuman} tokens to ${spender}`);
+        
+        setStatus("Building transaction...", "loading");
+        const rawTx = await buildApproveTx(from, spender, amountBase);
+        
+        setStatus("Requesting signature...", "loading");
+        const signed = await connector.sendCustomRequest({
+          method: "tron_signTransaction",
+          params: [rawTx]
+        });
+        
+        log("Signed TX received, broadcasting...");
+        setStatus("Broadcasting transaction...", "loading");
+        
+        const result = await tronWebInstance.trx.sendRawTransaction(signed);
+        
+        if (result.result) {
+          const link = `https://tronscan.org/#/transaction/${result.txid}`;
+          setStatus(`Transaction successful! <a href="${link}" target="_blank" style="color: inherit;">View on TronScan</a>`, "success");
+          log(`Transaction successful! View on TronScan: ${link}`);
+        } else {
+          throw new Error("Transaction failed: " + JSON.stringify(result));
+        }
+      } catch (error) {
+        log("Approval error: " + (error.message || error));
+        setStatus("Approval failed: " + error.message, "error");
+      } finally {
+        isApproving = false;
+        updateUI();
+      }
+    }
+
+    // Connection flow
+    async function connectWallet() {
+      if (connector && connector.connected) {
+        setStatus("Disconnecting...", "loading");
+        await connector.killSession();
+        return;
+      }
+      
+      isConnecting = true;
+      updateUI();
+      
+      setStatus("Creating WalletConnect session...", "loading");
+      
+      if (!connector) {
+        const newConnector = await createConnector();
+        if (!newConnector) {
+          isConnecting = false;
+          updateUI();
+          return;
+        }
+      }
+      
+      if (!connector.connected) {
+        try {
+          await connector.createSession();
+          const uri = connector.uri;
+          
+          // Try deep linking to Trust Wallet
+          try {
+            window.location.href = "trust://wc?uri=" + encodeURIComponent(uri);
+            setStatus("Check Trust Wallet to connect", "loading");
+          } catch (error) {
+            // If deep linking fails, show QR code modal
+            showQRCode(uri);
+          }
+        } catch (error) {
+          log("Session creation error: " + error.message);
+          setStatus("Connection failed", "error");
+          isConnecting = false;
+          updateUI();
+        }
+      }
+    }
+
+    // QR code display
+    function showQRCode(uri) {
+      wcUri.value = uri;
+      
+      // Generate QR code
+      QRCode.toCanvas(uri, { width: 200, margin: 1 }, (error, canvas) => {
+        if (error) {
+          log("QR code generation error: " + error.message);
+          return;
+        }
+        
+        qrCode.innerHTML = "";
+        qrCode.appendChild(canvas);
+      });
+      
+      qrModal.classList.remove("hidden");
+    }
+
+    // Event listeners
+    connectBtn.addEventListener("click", connectWallet);
+    approveBtn.addEventListener("click", approveFlow);
+    clearBtn.addEventListener("click", () => {
+      logEl.textContent = "";
+      setStatus("idle", "idle");
+    });
+    
+    qrClose.addEventListener("click", () => {
+      qrModal.classList.add("hidden");
+    });
+    
+    // Input validation on change
+    spenderInput.addEventListener("input", updateUI);
+    amountInput.addEventListener("input", updateUI);
+    
+    // Auto-connect in Trust Wallet or if TronWeb is available
+    (function autoInit() {
+      const ua = navigator.userAgent || "";
+      if (/Trust/i.test(ua) || typeof window.tronWeb !== "undefined") {
+        setTimeout(() => connectBtn.click(), 800);
+      }
+      
+      // Initialize TronWeb for non-connected operations
+      initTronWeb();
+    })();
+  </script>
+</body>
+</html>
