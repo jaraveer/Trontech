@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TronTech — TRC20 Approve (Mainnet)</title>
-  <meta name="description" content="TronTech TRC20 approve demo wired to Trust Wallet + WalletConnect on TRON mainnet" />
+  <meta name="description" content="TronTech TRC20 approve demo for Trust Wallet on TRON mainnet" />
   <style>
     :root {
       --bg: #071226;
@@ -218,7 +218,50 @@
       font-size: 13px;
     }
     
-    .qr-modal {
+    .wallet-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    
+    .wallet-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      text-align: left;
+    }
+    
+    .wallet-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent);
+    }
+    
+    .wallet-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #00bfa6, #0066ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .modal {
       position: fixed;
       top: 0;
       left: 0;
@@ -231,15 +274,16 @@
       z-index: 1000;
     }
     
-    .qr-content {
+    .modal-content {
       background: var(--card);
       padding: 20px;
       border-radius: 12px;
       text-align: center;
       max-width: 300px;
+      width: 90%;
     }
     
-    .qr-close {
+    .modal-close {
       position: absolute;
       top: 10px;
       right: 10px;
@@ -250,8 +294,21 @@
       cursor: pointer;
     }
     
-    .hidden {
-      display: none;
+    .qr-code {
+      margin: 15px 0;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    
+    .instructions {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: left;
     }
   </style>
 </head>
@@ -262,10 +319,10 @@
         <div class="logo" aria-hidden="true">TT</div>
         <div>
           <h1>TronTech — TRC20 Approve</h1>
-          <div class="sub">Connected to TRON Mainnet • Contract: <strong>TPT4Xin2sgSvWf53jKGcZXhMGLzaqNmkLh</strong></div>
+          <div class="sub">TRON Mainnet • Contract: <strong>TPT4Xin2sgSvWf53jKGcZXhMGLzaqNmkLh</strong></div>
         </div>
       </div>
-      <div><button id="connectBtn" class="btn-primary">Connect</button></div>
+      <div><button id="connectBtn" class="btn-primary">Connect Wallet</button></div>
     </header>
 
     <div class="card">
@@ -300,27 +357,67 @@
     </div>
   </div>
 
-  <div id="qrModal" class="qr-modal hidden">
-    <div class="qr-content">
-      <button id="qrClose" class="qr-close">×</button>
-      <h3>Scan with Trust Wallet</h3>
-      <div id="qrCode"></div>
-      <p>Or copy this URI:</p>
-      <textarea id="wcUri" rows="3" style="width: 100%; background: rgba(0,0,0,0.2); border: none; border-radius: 4px; color: white; padding: 8px; resize: none;"></textarea>
+  <!-- Wallet Selection Modal -->
+  <div id="walletModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="walletClose" class="modal-close">×</button>
+      <h3>Choose Wallet</h3>
+      <div class="wallet-options">
+        <button class="wallet-btn" id="trustWalletBtn">
+          <div class="wallet-icon">TW</div>
+          <div>
+            <div style="font-weight: bold;">Trust Wallet</div>
+            <div style="font-size: 12px; color: var(--muted);">Mobile App (Recommended)</div>
+          </div>
+        </button>
+        <button class="wallet-btn" id="tronLinkBtn">
+          <div class="wallet-icon">TL</div>
+          <div>
+            <div style="font-weight: bold;">TronLink</div>
+            <div style="font-size: 12px; color: var(--muted);">Browser Extension</div>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 
-  <script src="https://unpkg.com/@walletconnect/client/dist/umd/index.min.js"></script>
+  <!-- Trust Wallet Connection Modal -->
+  <div id="trustWalletModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="trustWalletClose" class="modal-close">×</button>
+      <h3>Connect Trust Wallet</h3>
+      
+      <div class="instructions">
+        <strong>Method 1: Deep Link (Mobile)</strong><br>
+        Click the button below to open Trust Wallet automatically
+      </div>
+      
+      <button id="deepLinkBtn" class="btn-primary" style="width: 100%; margin: 10px 0;">
+        Open in Trust Wallet
+      </button>
+      
+      <div class="instructions">
+        <strong>Method 2: Manual Connection</strong><br>
+        1. Open Trust Wallet app<br>
+        2. Go to Browser<br>
+        3. Navigate to this URL:<br>
+        <code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block;">
+          https://trontech.shop
+        </code>
+      </div>
+    </div>
+  </div>
+
+  <!-- TronWeb Library -->
   <script src="https://unpkg.com/tronweb/dist/TronWeb.js"></script>
   <script>
     // Constants
     const TOKEN_CONTRACT = "TPT4Xin2sgSvWf53jKGcZXhMGLzaqNmkLh";
     const MAINNET_NODE = "https://api.trongrid.io";
-    
+
     // State variables
-    let connector = null;
-    let tronWebInstance = null;
-    let isConnecting = false;
+    let tronWeb = null;
+    let isConnected = false;
     let isApproving = false;
 
     // DOM elements
@@ -334,10 +431,13 @@
     const amountInput = document.getElementById("amount");
     const spenderError = document.getElementById("spenderError");
     const amountError = document.getElementById("amountError");
-    const qrModal = document.getElementById("qrModal");
-    const qrClose = document.getElementById("qrClose");
-    const qrCode = document.getElementById("qrCode");
-    const wcUri = document.getElementById("wcUri");
+    const walletModal = document.getElementById("walletModal");
+    const walletClose = document.getElementById("walletClose");
+    const trustWalletBtn = document.getElementById("trustWalletBtn");
+    const tronLinkBtn = document.getElementById("tronLinkBtn");
+    const trustWalletModal = document.getElementById("trustWalletModal");
+    const trustWalletClose = document.getElementById("trustWalletClose");
+    const deepLinkBtn = document.getElementById("deepLinkBtn");
 
     // Utility functions
     function log(msg) {
@@ -387,122 +487,159 @@
     }
 
     function updateUI() {
-      const isConnected = connector && connector.connected;
-      
-      if (isConnected) {
+      if (isConnected && tronWeb && tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
         connectBtn.textContent = "Disconnect";
         approveBtn.disabled = isApproving || !validateInputs();
       } else {
-        connectBtn.textContent = isConnecting ? "Connecting..." : "Connect";
+        connectBtn.textContent = "Connect Wallet";
         approveBtn.disabled = true;
       }
     }
 
-    // TronWeb initialization - FIXED VERSION
+    // Initialize TronWeb with public node
     async function initTronWeb() {
       try {
-        // Check if TronWeb is available and what format it's in
-        if (typeof window.TronWeb === 'undefined') {
+        log("Initializing TronWeb...");
+        
+        if (typeof TronWeb === 'undefined') {
           throw new Error('TronWeb library not loaded');
         }
-        
-        // Different TronWeb distributions might export differently
-        let TronWebConstructor;
-        if (typeof window.TronWeb === 'function') {
-          TronWebConstructor = window.TronWeb;
-        } else if (window.TronWeb.default) {
-          TronWebConstructor = window.TronWeb.default;
-        } else {
-          // If it's already an instance or has different structure
-          tronWebInstance = window.TronWeb;
-          log("Using global TronWeb instance");
-          return true;
-        }
-        
-        // Create new instance
-        tronWebInstance = new TronWebConstructor({
-          fullHost: MAINNET_NODE,
-          headers: { "TRON-PRO-API-KEY": "your-api-key-here" }
+
+        // Create TronWeb instance
+        tronWeb = new TronWeb({
+          fullHost: MAINNET_NODE
         });
-        
-        // Test the connection
-        await tronWebInstance.trx.getCurrentBlock();
-        log("TronWeb connected to mainnet: " + MAINNET_NODE);
+
+        // Test connection
+        await tronWeb.trx.getCurrentBlock();
+        log("✓ TronWeb initialized successfully");
         return true;
       } catch (error) {
-        log("Failed to initialize TronWeb: " + error.message);
-        setStatus("TronWeb initialization failed", "error");
+        log(`✗ TronWeb initialization failed: ${error.message}`);
         return false;
       }
     }
 
-    // WalletConnect connector
-    async function createConnector() {
+    // Connect to Trust Wallet
+    async function connectTrustWallet() {
       try {
-        const WalletConnect = window.WalletConnect?.default || window.WalletConnect;
+        walletModal.classList.add("hidden");
+        trustWalletModal.classList.remove("hidden");
         
-        if (typeof WalletConnect === 'undefined') {
-          throw new Error('WalletConnect library not loaded');
-        }
+        // Initialize TronWeb first
+        await initTronWeb();
         
-        connector = new WalletConnect({ 
-          bridge: "https://bridge.walletconnect.org" 
-        });
+        log("Ready for Trust Wallet connection");
+        setStatus("Ready to connect Trust Wallet", "loading");
         
-        connector.on("connect", (error, payload) => {
-          if (error) {
-            log("Connection error: " + error.message);
-            setStatus("Connection failed", "error");
-            return;
-          }
-          
-          const address = payload.params[0].accounts[0];
-          addressEl.textContent = address;
-          isConnecting = false;
-          setStatus("Connected", "success");
-          log("Connected: " + address);
-          updateUI();
-        });
-        
-        connector.on("disconnect", (error) => {
-          if (error) {
-            log("Disconnection error: " + error.message);
-          }
-          
-          addressEl.textContent = "Not connected";
-          isConnecting = false;
-          setStatus("Disconnected", "idle");
-          log("Disconnected");
-          updateUI();
-        });
-        
-        connector.on("session_update", (error, payload) => {
-          if (error) {
-            log("Session update error: " + error.message);
-            return;
-          }
-          
-          const address = payload.params[0].accounts[0];
-          addressEl.textContent = address;
-          log("Session updated: " + address);
-        });
-        
-        return connector;
       } catch (error) {
-        log("Failed to create connector: " + error.message);
-        setStatus("Connector creation failed", "error");
-        return null;
+        log(`Trust Wallet setup error: ${error.message}`);
+        setStatus("Setup failed", "error");
+      }
+    }
+
+    // Connect to TronLink
+    async function connectTronLink() {
+      try {
+        setStatus("Connecting to TronLink...", "loading");
+        walletModal.classList.add("hidden");
+
+        if (window.tronLink && window.tronLink.tronWeb) {
+          log("✓ TronLink detected");
+          
+          const tronLinkTronWeb = window.tronLink.tronWeb;
+          
+          // Request account access
+          const result = await tronLinkTronWeb.request({ method: 'tron_requestAccounts' });
+          
+          if (result.code === 200) {
+            tronWeb = tronLinkTronWeb;
+            isConnected = true;
+            
+            const address = tronWeb.defaultAddress.base58;
+            addressEl.textContent = address;
+            
+            log(`✓ Connected to TronLink: ${address}`);
+            setStatus("Connected to TronLink", "success");
+            updateUI();
+            
+          } else {
+            throw new Error("User denied account access");
+          }
+        } else {
+          throw new Error("TronLink not detected");
+        }
+      } catch (error) {
+        log(`✗ TronLink connection failed: ${error.message}`);
+        setStatus("TronLink connection failed", "error");
+      }
+    }
+
+    // Check for existing TronLink connection
+    function checkExistingConnection() {
+      if (window.tronLink && window.tronLink.tronWeb && window.tronLink.tronWeb.defaultAddress) {
+        const address = window.tronLink.tronWeb.defaultAddress.base58;
+        if (address) {
+          tronWeb = window.tronLink.tronWeb;
+          isConnected = true;
+          addressEl.textContent = address;
+          setStatus("Connected to TronLink", "success");
+          log(`✓ Reconnected to TronLink: ${address}`);
+          updateUI();
+          return true;
+        }
+      }
+      
+      // Check if we're in Trust Wallet browser
+      if (isTrustWalletBrowser()) {
+        log("Detected Trust Wallet browser");
+        setStatus("Open in Trust Wallet browser to connect", "loading");
+      }
+      
+      return false;
+    }
+
+    // Check if user is in Trust Wallet browser
+    function isTrustWalletBrowser() {
+      const userAgent = navigator.userAgent || '';
+      return /TrustWallet/i.test(userAgent) || 
+             window.ethereum?.isTrust || 
+             window.trustWallet;
+    }
+
+    // Handle Trust Wallet connection via injected provider
+    async function handleTrustWalletInjection() {
+      try {
+        // Trust Wallet injects a TronWeb instance when in its browser
+        if (window.tronWeb && window.tronWeb.defaultAddress) {
+          tronWeb = window.tronWeb;
+          isConnected = true;
+          
+          const address = tronWeb.defaultAddress.base58;
+          addressEl.textContent = address;
+          
+          log(`✓ Connected to Trust Wallet: ${address}`);
+          setStatus("Connected to Trust Wallet", "success");
+          updateUI();
+          
+          trustWalletModal.classList.add("hidden");
+          return true;
+        }
+        return false;
+      } catch (error) {
+        log(`Trust Wallet injection error: ${error.message}`);
+        return false;
       }
     }
 
     // Token amount conversion
     async function toTokenBase(amountHuman) {
       try {
-        if (!tronWebInstance) {
+        if (!tronWeb) {
           throw new Error('TronWeb not initialized');
         }
         
-        const contract = await tronWebInstance.contract().at(TOKEN_CONTRACT);
+        const contract = await tronWeb.contract().at(TOKEN_CONTRACT);
         const decimals = await contract.decimals().call();
         const decimalsStr = decimals.toString();
         const factor = BigInt(10) ** BigInt(decimalsStr);
@@ -523,7 +660,7 @@
         return (whole * factor) + fracBig;
       } catch (error) {
         log("Error converting amount: " + error.message);
-        // Fallback: assume 6 decimals (common for TRC20 tokens)
+        // Fallback: assume 6 decimals
         return BigInt(Math.floor(Number(amountHuman) * 1e6));
       }
     }
@@ -531,11 +668,13 @@
     // Transaction building
     async function buildApproveTx(from, spender, amountBase) {
       try {
-        if (!tronWebInstance) {
+        if (!tronWeb) {
           throw new Error('TronWeb not initialized');
         }
         
-        const tx = await tronWebInstance.transactionBuilder.triggerSmartContract(
+        log(`Building approve transaction: ${from} -> ${spender}`);
+        
+        const tx = await tronWeb.transactionBuilder.triggerSmartContract(
           TOKEN_CONTRACT,
           "approve(address,uint256)",
           { feeLimit: 1_000_000 },
@@ -547,10 +686,11 @@
         );
         
         if (tx && tx.result && tx.result.result) {
+          log("✓ Transaction built successfully");
           return tx.transaction;
         }
         
-        throw new Error("Transaction building failed");
+        throw new Error("Transaction building failed: " + JSON.stringify(tx));
       } catch (error) {
         log("Transaction building error: " + error.message);
         throw error;
@@ -559,8 +699,13 @@
 
     // Approval flow
     async function approveFlow() {
-      if (!connector || !connector.connected) {
+      if (!tronWeb || !isConnected) {
         setStatus("Wallet not connected", "error");
+        return;
+      }
+      
+      if (!tronWeb.defaultAddress || !tronWeb.defaultAddress.base58) {
+        setStatus("Wallet not properly connected", "error");
         return;
       }
       
@@ -573,13 +718,7 @@
       updateUI();
       
       try {
-        setStatus("Initializing TronWeb...", "loading");
-        const tronWebReady = await initTronWeb();
-        if (!tronWebReady) {
-          throw new Error("TronWeb initialization failed");
-        }
-        
-        const from = connector.accounts[0];
+        const from = tronWeb.defaultAddress.base58;
         const spender = spenderInput.value.trim();
         const amountHuman = amountInput.value.trim();
         
@@ -591,25 +730,25 @@
         const rawTx = await buildApproveTx(from, spender, amountBase);
         
         setStatus("Requesting signature...", "loading");
-        const signed = await connector.sendCustomRequest({
-          method: "tron_signTransaction",
-          params: [rawTx]
-        });
+        log("Signing transaction...");
         
-        log("Signed TX received, broadcasting...");
+        const signed = await tronWeb.trx.sign(rawTx);
+        
+        log("✓ Transaction signed, broadcasting...");
         setStatus("Broadcasting transaction...", "loading");
         
-        const result = await tronWebInstance.trx.sendRawTransaction(signed);
+        const result = await tronWeb.trx.sendRawTransaction(signed);
         
         if (result.result) {
           const link = `https://tronscan.org/#/transaction/${result.txid}`;
-          setStatus(`Transaction successful! <a href="${link}" target="_blank" style="color: inherit;">View on TronScan</a>`, "success");
-          log(`Transaction successful! View on TronScan: ${link}`);
+          setStatus(`Transaction successful!`, "success");
+          log(`✓ Transaction successful! View on TronScan: ${link}`);
+          log(`Transaction ID: ${result.txid}`);
         } else {
           throw new Error("Transaction failed: " + JSON.stringify(result));
         }
       } catch (error) {
-        log("Approval error: " + (error.message || error));
+        log("✗ Approval error: " + (error.message || error));
         setStatus("Approval failed: " + error.message, "error");
       } finally {
         isApproving = false;
@@ -617,81 +756,113 @@
       }
     }
 
-    // Connection flow
-    async function connectWallet() {
-      if (connector && connector.connected) {
-        setStatus("Disconnecting...", "loading");
-        await connector.killSession();
-        return;
-      }
-      
-      isConnecting = true;
+    // Disconnect wallet
+    function disconnectWallet() {
+      tronWeb = null;
+      isConnected = false;
+      addressEl.textContent = "Not connected";
+      setStatus("Disconnected", "idle");
+      log("Disconnected from wallet");
       updateUI();
-      
-      setStatus("Creating WalletConnect session...", "loading");
-      
-      if (!connector) {
-        const newConnector = await createConnector();
-        if (!newConnector) {
-          isConnecting = false;
-          updateUI();
-          return;
-        }
-      }
-      
-      if (!connector.connected) {
-        try {
-          await connector.createSession();
-          const uri = connector.uri;
-          
-          // Try deep linking to Trust Wallet
-          try {
-            window.location.href = "trust://wc?uri=" + encodeURIComponent(uri);
-            setStatus("Check Trust Wallet to connect", "loading");
-          } catch (error) {
-            // If deep linking fails, show alert with URI
-            alert("Please open Trust Wallet and connect using this URI:\n\n" + uri);
-            setStatus("URI copied to clipboard", "loading");
-          }
-        } catch (error) {
-          log("Session creation error: " + error.message);
-          setStatus("Connection failed", "error");
-          isConnecting = false;
-          updateUI();
-        }
-      }
+    }
+
+    // Show wallet modal
+    function showWalletModal() {
+      walletModal.classList.remove("hidden");
     }
 
     // Event listeners
-    connectBtn.addEventListener("click", connectWallet);
+    connectBtn.addEventListener("click", () => {
+      if (isConnected) {
+        disconnectWallet();
+      } else {
+        showWalletModal();
+      }
+    });
+    
     approveBtn.addEventListener("click", approveFlow);
     clearBtn.addEventListener("click", () => {
       logEl.textContent = "";
       setStatus("idle", "idle");
     });
     
-    qrClose.addEventListener("click", () => {
-      qrModal.classList.add("hidden");
+    walletClose.addEventListener("click", () => {
+      walletModal.classList.add("hidden");
+    });
+    
+    trustWalletClose.addEventListener("click", () => {
+      trustWalletModal.classList.add("hidden");
+    });
+    
+    trustWalletBtn.addEventListener("click", connectTrustWallet);
+    tronLinkBtn.addEventListener("click", connectTronLink);
+    
+    // Deep link to Trust Wallet
+    deepLinkBtn.addEventListener("click", () => {
+      const currentUrl = encodeURIComponent(window.location.href);
+      const trustWalletUrl = `https://link.trustwallet.com/open_url?coin_id=195&url=${currentUrl}`;
+      
+      log("Opening Trust Wallet...");
+      setStatus("Opening Trust Wallet...", "loading");
+      
+      // Try to open Trust Wallet
+      window.location.href = trustWalletUrl;
+      
+      // Fallback: show instructions
+      setTimeout(() => {
+        setStatus("Please open Trust Wallet manually", "loading");
+      }, 2000);
     });
     
     // Input validation on change
     spenderInput.addEventListener("input", updateUI);
     amountInput.addEventListener("input", updateUI);
     
-    // Auto-connect in Trust Wallet or if TronWeb is available
-    (function autoInit() {
-      const ua = navigator.userAgent || "";
-      if (/Trust/i.test(ua) || typeof window.tronWeb !== "undefined") {
-        setTimeout(() => connectBtn.click(), 800);
-      }
+    // Auto-initialize on page load
+    window.addEventListener('load', async () => {
+      log("Page loaded. Initializing...");
       
-      // Initialize TronWeb for non-connected operations
-      initTronWeb().then(success => {
-        if (success) {
-          log("TronWeb initialized successfully");
+      // Initialize TronWeb with public node
+      await initTronWeb();
+      
+      // Check for existing connections
+      setTimeout(() => {
+        if (!checkExistingConnection()) {
+          // Check for Trust Wallet injection
+          handleTrustWalletInjection();
         }
-      });
-    })();
+      }, 1000);
+    });
+
+    // Listen for TronLink injection
+    window.addEventListener('tronLink#initialized', () => {
+      log("TronLink initialized");
+      checkExistingConnection();
+    });
+
+    // Periodically check for wallet injections
+    setInterval(() => {
+      if (!isConnected) {
+        // Check for Trust Wallet
+        handleTrustWalletInjection();
+        
+        // Check for TronLink
+        if (window.tronLink && window.tronLink.tronWeb) {
+          checkExistingConnection();
+        }
+      }
+    }, 2000);
+
+    // Listen for page visibility changes (when returning from Trust Wallet)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !isConnected) {
+        // Page became visible again, check for wallet
+        setTimeout(() => {
+          handleTrustWalletInjection();
+          checkExistingConnection();
+        }, 500);
+      }
+    });
   </script>
 </body>
 </html>
