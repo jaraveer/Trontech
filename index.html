@@ -667,6 +667,22 @@
       // Initialize TronWeb for non-connected operations
       initTronWeb();
     })();
-  </script>
+  <!-- Load WalletConnect and TronWeb -->
+<script src="https://unpkg.com/@walletconnect/client/dist/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.1/dist/TronWeb.min.js"></script>
+<script>
+  const MAINNET_NODE = "https://api.trongrid.io";
+  let tronWebInstance;
+  function log(msg){ console.log(msg); }
+  async function initTronWeb(){
+    try {
+      tronWebInstance = new window.TronWeb({ fullHost: MAINNET_NODE });
+      log("✅ TronWeb initialized successfully");
+    } catch(e) {
+      log("❌ Failed to initialize TronWeb: " + e.message);
+    }
+  }
+  initTronWeb();
+</script>
 </body>
 </html>
